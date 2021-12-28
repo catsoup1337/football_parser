@@ -9,6 +9,7 @@ import requests
 import csv
 import time
 import datetime
+from fake_useragent import UserAgent
 
 from selectolax.parser import HTMLParser
 
@@ -21,6 +22,7 @@ y = yadisk.YaDisk(token="AQAAAAAeeuFqAAeVCjRRWT3G8khEv1eCtEu6uY4")
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
+ua = UserAgent()
 
 ATTEMPTS = 3
 ORDER = [
@@ -74,10 +76,10 @@ def handle_team(message):
         create_csv(FILENAME_CSV, ORDER)
         get_calendar(url_first , message, FILENAME_CSV)
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
-        src_t = f'{FILENAME_XLSX}' 
-        now = datetime.datetime.now().strftime("%d-%m-%Y--%H:%M")
-        y.upload(src_t, f'/documents/{now}-{FILENAME_XLSX}')
-        d_link = y.get_download_link(f'/documents/{now}-{FILENAME_XLSX}')
+        src_t = f'/app/{FILENAME_XLSX}' 
+        now = datetime.datetime.now().strftime("%d%m%Y%H%M")
+        y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
+        d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
         bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
     except Exception as e:
         bot.reply_to(message, e)
@@ -98,7 +100,10 @@ def get_html(url, attempts):
     html = None
     for attempt in range(1, attempts + 1):
         try:
-            response = requests.get(url=url, timeout=24)
+            response = requests.get(
+                url=url,
+                headers={'user-agent': f'{ua.random}'},
+                timeout=24)
         except Exception as error:
             print('Ошибка загрузки страницы:', error)
             print('Пауза 12 сек.')
@@ -167,7 +172,7 @@ def get_stats(match_info, order, FILENAME_CSV):
         data['Данные 2'] = f'{team_away_slag.capitalize()} {goal_away}'
 
         write_csv(filename=FILENAME_CSV, data=data)
-        # print(data['Дата'], data['Тур'], data['Команда 2'])
+        print(data['Дата'], data['Тур'], data['Команда 2'])
 
 
 def get_matchs(period_url, FILENAME_CSV):
