@@ -1,0 +1,11 @@
+certifi==2021.10.8
+charset-normalizer==2.0.9
+Cython==0.29.26
+idna==3.3
+pyTelegramBotAPI==4.2.2
+python-dotenv==0.13.0
+requests==2.26.0
+selectolax==0.3.6
+tqdm==4.62.3
+urllib3==1.26.7
+yadisk==1.2.14
