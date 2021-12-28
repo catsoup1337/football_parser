@@ -10,6 +10,9 @@ import csv
 import time
 from selectolax.parser import HTMLParser
 
+from pyexcel.cookbook import merge_all_to_a_book
+import glob
+
 load_dotenv()
 y = yadisk.YaDisk(token="AQAAAAAeeuFqAAeVCjRRWT3G8khEv1eCtEu6uY4")
 
@@ -17,25 +20,10 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-@bot.message_handler(commands=['start'])
-def start_message(message):
-    bot.send_message(message.chat.id,'Привет, напиши название команды на латинице')
-
-@bot.message_handler(content_types='text')
-def handle_team(message):
-    try:
-        bot.reply_to(message, "Обрабатываю запрос")
-        name = message.text
-        bot.reply_to(message, "Начал парсинг")
-        url_first =f'https://www.sports.ru/{name}/'
-        create_csv(FILENAME, ORDER)
-        get_calendar(url_first , message)
-    except Exception as e:
-        bot.reply_to(message, e)
-
 ATTEMPTS = 3
 ORDER = [
     'Дата',
+    '№ тура',
     'Тур',
     'Команда 1',
     'Голы Команда 1',
@@ -67,7 +55,30 @@ PERIODS = [
     '2020-2021',
     '2021-2022'
     ]
-FILENAME = 'liverpool.csv'
+
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id,'Привет, напиши название команды на латинице')
+
+@bot.message_handler(content_types='text')
+def handle_team(message):
+    try:
+        bot.reply_to(message, "Обрабатываю запрос")
+        name_site = message.text
+        bot.reply_to(message, "Начал парсинг")
+        url_first =f'https://www.sports.ru/{name_site}/'
+        FILENAME_CSV = f'{name_site}.csv'
+        FILENAME_XLSX = f'{name_site}.xlsx' 
+        create_csv(FILENAME_CSV, ORDER)
+        get_calendar(url_first , message, FILENAME_CSV)
+        merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
+        src_t = f'{FILENAME_XLSX}' 
+        y.upload(src_t, f'/documents/{FILENAME_XLSX}')
+        d_link = y.get_download_link(f'/documents/{FILENAME_XLSX}')
+        bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
+    except Exception as e:
+        bot.reply_to(message, e)
+
 
 
 def create_csv(filename, order):
@@ -101,7 +112,7 @@ def get_html(url, attempts):
     return html
 
 
-def get_stats(match_info, order):
+def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
     html = get_html(url=url, attempts=ATTEMPTS)
     if html:
@@ -112,7 +123,11 @@ def get_stats(match_info, order):
         match_date = '{2}.{1}.{0}'.format(*match_date)
         data['Дата'] = match_date
 
-        tour = tree.css_first('.top__tournament-round').text()
+        tour_n = tree.css_first('.top__tournament-round').text()
+        tour_n = tour_n.replace('Групповой этап', 'Regular Season')
+        data['№ тура'] = tour_n
+
+        tour = tree.css_first('.top__tournament-name').text().strip('.')
         tour = tour.replace('тур', 'tour')
         data['Тур'] = tour
 
@@ -148,11 +163,11 @@ def get_stats(match_info, order):
         data['Данные 1'] = f'{team_home_slag.capitalize()} {goal_home}'
         data['Данные 2'] = f'{team_away_slag.capitalize()} {goal_away}'
 
-        write_csv(filename=FILENAME, data=data)
-        print(data['Дата'], data['Тур'], data['Команда 2'])
+        write_csv(filename=FILENAME_CSV, data=data)
+        # print(data['Дата'], data['Тур'], data['Команда 2'])
 
 
-def get_matchs(period_url):
+def get_matchs(period_url, FILENAME_CSV):
     html = get_html(url=period_url, attempts=ATTEMPTS)
     tree = HTMLParser(html)
     stat_table = tree.css_first('table.stat-table').css('tbody > tr')
@@ -178,10 +193,10 @@ def get_matchs(period_url):
         if 'перенесен' not in match_info['date']:
             tournament = match_info['tournament'].lower()
             if 'кубок' in tournament or 'лига' in tournament or 'серия' in tournament:
-                get_stats(match_info, ORDER)
+                get_stats(match_info, ORDER , FILENAME_CSV)
 
 
-def get_calendar(team_url, message):
+def get_calendar(team_url, message, FILENAME_CSV):
     html = get_html(url=f'{team_url}calendar/', attempts=ATTEMPTS)
     tree = HTMLParser(html)
 
@@ -195,9 +210,9 @@ def get_calendar(team_url, message):
 
     counter = len(period_urls)
     period_urls = list(reversed(period_urls))
-    for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
+    for i in trange(2, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
-        get_matchs(period_url)
+        get_matchs(period_url, FILENAME_CSV)
 
 
 def get_teams(championship_url):
