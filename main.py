@@ -8,6 +8,8 @@ import yadisk
 import requests
 import csv
 import time
+import datetime
+
 from selectolax.parser import HTMLParser
 
 from pyexcel.cookbook import merge_all_to_a_book
@@ -73,8 +75,9 @@ def handle_team(message):
         get_calendar(url_first , message, FILENAME_CSV)
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
         src_t = f'{FILENAME_XLSX}' 
-        y.upload(src_t, f'/documents/{FILENAME_XLSX}')
-        d_link = y.get_download_link(f'/documents/{FILENAME_XLSX}')
+        now = datetime.datetime.now().strftime("%d-%m-%Y--%H:%M")
+        y.upload(src_t, f'/documents/{now}-{FILENAME_XLSX}')
+        d_link = y.get_download_link(f'/documents/{now}-{FILENAME_XLSX}')
         bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
     except Exception as e:
         bot.reply_to(message, e)
