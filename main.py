@@ -20,9 +20,14 @@ load_dotenv()
 y = yadisk.YaDisk(token="AQAAAAAeeuFqAAeVCjRRWT3G8khEv1eCtEu6uY4")
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+PROXY = os.getenv('PROXY')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 ua = UserAgent()
+
+proxies = {
+    "http":PROXY
+}
 
 ATTEMPTS = 3
 ORDER = [
@@ -103,6 +108,7 @@ def get_html(url, attempts):
             response = requests.get(
                 url=url,
                 headers={'user-agent': f'{ua.random}'},
+                proxies = proxies,
                 timeout=24)
         except Exception as error:
             print('Ошибка загрузки страницы:', error)
