@@ -172,7 +172,7 @@ def get_stats(match_info, order, FILENAME_CSV):
         data['Данные 2'] = f'{team_away_slag.capitalize()} {goal_away}'
 
         write_csv(filename=FILENAME_CSV, data=data)
-        print(data['Дата'], data['Тур'], data['Команда 2'])
+        # print(data['Дата'], data['Тур'], data['Команда 2'])
 
 
 def get_matchs(period_url, FILENAME_CSV):
