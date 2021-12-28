@@ -210,7 +210,7 @@ def get_calendar(team_url, message, FILENAME_CSV):
 
     counter = len(period_urls)
     period_urls = list(reversed(period_urls))
-    for i in trange(2, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
+    for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
         get_matchs(period_url, FILENAME_CSV)
 
