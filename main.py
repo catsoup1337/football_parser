@@ -80,14 +80,16 @@ def handle_team(message):
         FILENAME_XLSX = f'{name_site}.xlsx' 
         create_csv(FILENAME_CSV, ORDER)
         get_calendar(url_first , message, FILENAME_CSV)
+    except Exception as e:
+        bot.reply_to(message, e)
+    finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
         src_t = f'/app/{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
         bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
-    except Exception as e:
-        bot.reply_to(message, e)
+
 
 
 
