@@ -134,7 +134,7 @@ def get_stats(match_info, order, FILENAME_CSV):
     if html:
         tree = HTMLParser(html)
         data = dict.fromkeys(order)
-
+        time.sleep(1.5)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
         match_date = '{2}.{1}.{0}'.format(*match_date)
         data['Дата'] = match_date
