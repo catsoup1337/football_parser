@@ -86,6 +86,7 @@ def handle_team(message):
     finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
         src_t = f'/app/{FILENAME_XLSX}' 
+        # src_t = f'{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
@@ -132,6 +133,7 @@ def get_html(url, attempts):
 def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
     html = get_html(url=url, attempts=ATTEMPTS)
+    print(url)
     if html:
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
@@ -146,16 +148,17 @@ def get_stats(match_info, order, FILENAME_CSV):
         tour_n = tour_n.replace('Групповой этап', 'Regular Season')
         data['№ тура'] = tour_n
 
-        tour = tree.css_first('.top__tournament-name').text().strip('.')
+        tour = soup.find(class_="top__tournament-name").text.strip('.')
         tour = tour.replace('тур', 'tour')
         data['Тур'] = tour
 
-        team_home_slag = soup.find(class_="match-summary__team-info match-summary__team-info--home").text
-        team_away_slag = soup.find(class_="match-summary__team-info match-summary__team-info--away").text
+        team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").text
+        team_away_slag = soup.find(class_="match-summary__team-name match-summary__team-name--away").text
 
-        matchboard = tree.css_first('.matchboard').css('.matchboard__card')
-        goal_home = matchboard[0].css_first('.matchboard__card-game').text().strip()
-        goal_away = matchboard[1].css_first('.matchboard__card-game').text().strip()
+        b = []
+        goal_home = str(soup.find_all(class_="matchboard__card")[0].text)
+        goal_away = str(soup.find_all(class_="matchboard__card")[1].text)
+        # print(goal_home,'-',goal_away)
 
         if 'В гостях' in match_info['place']:
             team_1_slag = team_away_slag
@@ -178,6 +181,7 @@ def get_stats(match_info, order, FILENAME_CSV):
         data['Данные 2'] = f'{team_away_slag.capitalize()} {goal_away}'
 
         write_csv(filename=FILENAME_CSV, data=data)
+        b.clear
         # print(data['Дата'], data['Тур'], data['Команда 2'])
 
 
@@ -193,6 +197,7 @@ def get_matchs(period_url, FILENAME_CSV):
         match_info['place'] = place
         match_info['tournament'] = tds[1].text().strip()
         match_info['date'] = tds[0].text().strip()
+        print(tds[0].text().strip())
         score = tds[4].text().strip()
         if 'превью' not in score:
             match_url = tds[4].css_first('.score').attributes['href']
