@@ -12,6 +12,7 @@ import datetime
 from fake_useragent import UserAgent
 
 from selectolax.parser import HTMLParser
+from bs4 import BeautifulSoup
 
 from pyexcel.cookbook import merge_all_to_a_book
 import glob
@@ -84,7 +85,7 @@ def handle_team(message):
         bot.reply_to(message, e)
     finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
-        src_t = f'/app/{FILENAME_XLSX}' 
+        src_t = f'/app/documents{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
@@ -132,10 +133,12 @@ def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
     html = get_html(url=url, attempts=ATTEMPTS)
     if html:
+        soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
         data = dict.fromkeys(order)
         time.sleep(1.5)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
+        print(match_date)
         match_date = '{2}.{1}.{0}'.format(*match_date)
         data['Дата'] = match_date
 
@@ -147,13 +150,8 @@ def get_stats(match_info, order, FILENAME_CSV):
         tour = tour.replace('тур', 'tour')
         data['Тур'] = tour
 
-        team_info_home = tree.css_first('.match-summary__team-info--home')
-        team_home_slag = team_info_home.css_first('a[itemprop="name"]').attributes['href'][1:-1]
-        team_home_name = team_info_home.css_first('a[itemprop="name"]').text()
-
-        team_info_away = tree.css_first('.match-summary__team-info--away')
-        team_away_slag = team_info_away.css_first('a[itemprop="name"]').attributes['href'][1:-1]
-        team_away_name = team_info_away.css_first('a[itemprop="name"]').text()
+        team_home_slag = soup.find(class_="match-summary__team-info match-summary__team-info--home").text
+        team_away_slag = soup.find(class_="match-summary__team-info match-summary__team-info--away").text
 
         matchboard = tree.css_first('.matchboard').css('.matchboard__card')
         goal_home = matchboard[0].css_first('.matchboard__card-game').text().strip()
@@ -198,17 +196,18 @@ def get_matchs(period_url, FILENAME_CSV):
         score = tds[4].text().strip()
         if 'превью' not in score:
             match_url = tds[4].css_first('.score').attributes['href']
+            print(match_url)
             if match_url:
                 if 'https://www.sports.ru' in match_url:
                     match_info['match_url'] = match_url
                 else:
                     match_info['match_url'] = f'https://www.sports.ru{match_url}'
         matchs.append(match_info)
-
     for match_info in matchs:
         if 'перенесен' not in match_info['date']:
             tournament = match_info['tournament'].lower()
             if 'кубок' in tournament or 'лига' in tournament or 'серия' in tournament:
+                print(match_info)
                 get_stats(match_info, ORDER , FILENAME_CSV)
 
 
