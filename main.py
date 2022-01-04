@@ -85,7 +85,7 @@ def handle_team(message):
         bot.reply_to(message, e)
     finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
-        src_t = f'app/documents/{FILENAME_XLSX}' 
+        src_t = f'/app/{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
