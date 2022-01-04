@@ -136,9 +136,9 @@ def get_stats(match_info, order, FILENAME_CSV):
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
         data = dict.fromkeys(order)
-        time.sleep(1.5)
+        time.sleep(1)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
-        print(match_date)
+        # print(match_date)
         match_date = '{2}.{1}.{0}'.format(*match_date)
         data['Дата'] = match_date
 
@@ -196,7 +196,7 @@ def get_matchs(period_url, FILENAME_CSV):
         score = tds[4].text().strip()
         if 'превью' not in score:
             match_url = tds[4].css_first('.score').attributes['href']
-            print(match_url)
+            # print(match_url)
             if match_url:
                 if 'https://www.sports.ru' in match_url:
                     match_info['match_url'] = match_url
@@ -207,7 +207,7 @@ def get_matchs(period_url, FILENAME_CSV):
         if 'перенесен' not in match_info['date']:
             tournament = match_info['tournament'].lower()
             if 'кубок' in tournament or 'лига' in tournament or 'серия' in tournament:
-                print(match_info)
+                # print(match_info)
                 get_stats(match_info, ORDER , FILENAME_CSV)
 
 
