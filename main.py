@@ -93,8 +93,6 @@ def handle_team(message):
         bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
 
 
-
-
 def create_csv(filename, order):
     with open(filename, 'w', encoding='utf-8', newline='') as file:
         csv.DictWriter(file, fieldnames=order).writeheader()
@@ -152,13 +150,14 @@ def get_stats(match_info, order, FILENAME_CSV):
         tour = tour.replace('тур', 'tour')
         data['Тур'] = tour
 
-        team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").text
-        team_away_slag = soup.find(class_="match-summary__team-name match-summary__team-name--away").text
+        team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").find('a').get('href').strip('/')
+        team_away_slag = soup.find(class_="match-summary__team-name match-summary__team-name--away").find('a').get('href').strip('/')
 
         b = []
         goal_home = str(soup.find_all(class_="matchboard__card")[0].text)
         goal_away = str(soup.find_all(class_="matchboard__card")[1].text)
         # print(goal_home,'-',goal_away)
+        print(team_home_slag,team_away_slag)
 
         if 'В гостях' in match_info['place']:
             team_1_slag = team_away_slag
