@@ -224,7 +224,7 @@ def get_calendar(team_url, message, FILENAME_CSV):
                 period_urls.append(period_url)
 
     counter = len(period_urls)
-    counter = 2
+    # counter = 2
     period_urls = list(reversed(period_urls))
     for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
@@ -238,7 +238,7 @@ def get_teams(championship_url):
     teams = table.css('tr')
     for team in teams:
         team_url = team.css_first('a.name').attributes['href']
-        print(team_url)
+        # print(team_url)
         get_calendar(team_url)
 
 bot.infinity_polling()
