@@ -1,3 +1,5 @@
+beautifulsoup4==4.10.0
+bs4==0.0.1
 certifi==2021.10.8
 chardet==4.0.0
 charset-normalizer==2.0.9
@@ -6,6 +8,7 @@ et-xmlfile==1.1.0
 fake-useragent==0.1.11
 idna==3.3
 lml==0.1.0
+lxml==4.7.1
 openpyxl==3.0.9
 pyexcel==0.6.7
 pyexcel-io==0.6.5
@@ -14,6 +17,7 @@ pyTelegramBotAPI==4.2.2
 python-dotenv==0.13.0
 requests==2.26.0
 selectolax==0.3.6
+soupsieve==2.3.1
 texttable==1.6.4
 tqdm==4.62.3
 urllib3==1.26.7
