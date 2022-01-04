@@ -85,7 +85,7 @@ def handle_team(message):
         bot.reply_to(message, e)
     finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
-        src_t = f'/app/documents{FILENAME_XLSX}' 
+        src_t = f'/app/documents/{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
@@ -136,7 +136,7 @@ def get_stats(match_info, order, FILENAME_CSV):
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
         data = dict.fromkeys(order)
-        time.sleep(1)
+        # time.sleep(1)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
         # print(match_date)
         match_date = '{2}.{1}.{0}'.format(*match_date)
@@ -224,6 +224,7 @@ def get_calendar(team_url, message, FILENAME_CSV):
                 period_urls.append(period_url)
 
     counter = len(period_urls)
+    counter = 2
     period_urls = list(reversed(period_urls))
     for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
