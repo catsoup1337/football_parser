@@ -17,8 +17,10 @@ pyTelegramBotAPI==4.2.2
 python-dotenv==0.13.0
 requests==2.26.0
 selectolax==0.3.6
+six==1.16.0
 soupsieve==2.3.1
 texttable==1.6.4
 tqdm==4.62.3
+transliterate==1.10.2
 urllib3==1.26.7
 yadisk==1.2.14
