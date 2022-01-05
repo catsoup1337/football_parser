@@ -86,8 +86,8 @@ def handle_team(message):
         bot.reply_to(message, e)
     finally:
         merge_all_to_a_book(glob.glob(FILENAME_CSV), FILENAME_XLSX)
-        # src_t = f'/app/{FILENAME_XLSX}' 
-        src_t = f'{FILENAME_XLSX}' 
+        src_t = f'/app/{FILENAME_XLSX}' 
+        # src_t = f'{FILENAME_XLSX}' 
         now = datetime.datetime.now().strftime("%d%m%Y%H%M")
         y.upload(src_t, f'/documents/{now}{FILENAME_XLSX}')
         d_link = y.get_download_link(f'/documents/{now}{FILENAME_XLSX}')
@@ -145,10 +145,10 @@ def get_stats(match_info, order, FILENAME_CSV):
 
         tour_n = tree.css_first('.top__tournament-round').text()
         tour_n = tour_n.replace('Групповой этап', 'Regular Season')
+        # tour_n = tour_n.replace('тур', 'tour')
         data['№ тура'] = tour_n
 
         tour = soup.find(class_="top__tournament-name").text.strip('.')
-        tour = tour.replace('тур', 'tour')
         data['Тур'] = tour
         try:
             team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").find('a').get('href').strip('/')
