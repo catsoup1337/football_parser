@@ -43,16 +43,27 @@ ORDER = [
     'Данные 1',
     'Данные 2']
 PERIODS = [ 
+    # '2000',
     '2000-2001',
+    # '2001',
     '2001-2002',
+    # '2002',
     '2002-2003',
+    # '2003',
     '2003-2004',
+    # '2004',
     '2004-2005',
+    # '2005',
     '2005-2006',
+    # '2006',
     '2006-2007',
+    # '2007',
     '2007-2008',
+    # '2008',
     '2008-2009',
+    # '2009',
     '2009-2010',
+    # '2010',
     '2010-2011',
     '2011-2012',
     '2012-2013',
@@ -64,7 +75,8 @@ PERIODS = [
     '2018-2019',
     '2019-2020',
     '2020-2021',
-    '2021-2022'
+    '2021-2022',
+    'calendar//',
     ]
 
 @bot.message_handler(commands=['start'])
@@ -207,11 +219,9 @@ def get_matchs(period_url, FILENAME_CSV):
         match_info['place'] = place
         match_info['tournament'] = tds[1].text().strip()
         match_info['date'] = tds[0].text().strip()
-        # print(tds[0].text().strip())
         score = tds[4].text().strip()
         if 'превью' not in score:
             match_url = tds[4].css_first('.score').attributes['href']
-            # print(match_url)
             if match_url:
                 if 'https://www.sports.ru' in match_url:
                     match_info['match_url'] = match_url
@@ -222,7 +232,6 @@ def get_matchs(period_url, FILENAME_CSV):
         if 'перенесен' not in match_info['date']:
             tournament = match_info['tournament'].lower()
             if 'кубок' in tournament or 'лига' in tournament or 'серия' in tournament:
-                # print(match_info)
                 get_stats(match_info, ORDER , FILENAME_CSV)
 
 
@@ -239,7 +248,7 @@ def get_calendar(team_url, message, FILENAME_CSV):
                 period_urls.append(period_url)
 
     counter = len(period_urls)
-    # counter = 2
+
     period_urls = list(reversed(period_urls))
     for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
@@ -253,7 +262,6 @@ def get_teams(championship_url):
     teams = table.css('tr')
     for team in teams:
         team_url = team.css_first('a.name').attributes['href']
-        # print(team_url)
         get_calendar(team_url)
 
 bot.infinity_polling()
