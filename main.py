@@ -41,7 +41,8 @@ ORDER = [
     'Голы Команда 2',
     'Команда 2',
     'Данные 1',
-    'Данные 2']
+    'Данные 2',
+    'Голы']
 PERIODS = [ 
     # '2000',
     '2000-2001',
@@ -113,7 +114,7 @@ def create_csv(filename, order):
 
 def write_csv(filename, data):
     with open(filename, 'a', encoding='utf-8', newline='') as file:
-        csv.DictWriter(file, fieldnames=list(data)).writerow(data)
+        csv.DictWriter(file, quotechar=" " ,fieldnames=list(data)).writerow(data)
 
 
 def get_html(url, attempts):
@@ -144,7 +145,7 @@ def get_html(url, attempts):
 def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
     html = get_html(url=url, attempts=ATTEMPTS)
-    # print(url)
+    print(url)
     if html:
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
@@ -162,6 +163,23 @@ def get_stats(match_info, order, FILENAME_CSV):
 
         tour = soup.find(class_="top__tournament-name").text.strip('.')
         data['Тур'] = tour
+        event_container  = soup.find_all(class_='event-container')
+        goals = []
+        for i in range(len(event_container)):
+            event = event_container[i].text.split(' ')
+            print(event)
+            if 'Гол!' in event:
+                if event[0] == 'Гол!':
+                    goals.append('1')
+                if event[2] == 'Гол!':
+                    goals.append('-1')
+            if 'Автогол!' in event:
+                if event[4] == 'Автогол!':
+                    goals.append('-1')
+                if event[0] == 'Автогол!':
+                    goals.append('1')
+        data['Голы'] = ','.join(goals)
+        print(','.join(goals))
         try:
             team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").find('a').get('href').strip('/')
             if team_home_slag.split('/')[0]=='tags':
