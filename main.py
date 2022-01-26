@@ -136,8 +136,31 @@ PERIODS2 = [
     '2020-21',
     '2021',
     '2021-22',
-    '2022'
+    '2022',
+    '22',
+    '21',
+    '20',
+    '19',
+    '18',
+    '17',
+    '16',
+    '15',
+    '14',
+    '13',
+    '12',
+    '11',
+    '10',
+    '09',
+    '08',
+    '07',
+    '06',
+    '05',
+    '04',
+    '03',
+    '02',
+    '01',
     ]
+
 
 
 @bot.message_handler(commands=['start'])
@@ -155,6 +178,7 @@ def start_message(message):
     bot.register_next_step_handler(msg, handle_team_sportbox)
 
 def handle_team(message):
+    global FILENAME_CSV,FILENAME_XLSX
     try:
         bot.reply_to(message, "Обрабатываю запрос")
         name_site = message.text
@@ -163,7 +187,7 @@ def handle_team(message):
         FILENAME_CSV = f'{name_site}.csv'
         FILENAME_XLSX = f'{name_site}.xlsx' 
         create_csv(FILENAME_CSV, ORDER)
-        get_calendar(url_first , message, FILENAME_CSV)
+        get_calendar(url_first , message)
     except Exception as e:
         bot.reply_to(message, e)
     finally:
@@ -211,13 +235,13 @@ def get_html(url, attempts = 4):
     return html
 
 
-def get_stats(match_info, order, FILENAME_CSV):
+def get_stats(match_info):
     url = match_info['match_url']
     html = get_html(url=url)
     if html:
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
-        data = dict.fromkeys(order)
+        data = dict.fromkeys(ORDER)
         # time.sleep(1)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
         # print(match_date)
@@ -275,7 +299,7 @@ def get_stats(match_info, order, FILENAME_CSV):
         write_csv(filename=FILENAME_CSV, data=data)
 
 
-def get_matchs(period_url, FILENAME_CSV):
+def get_matchs(period_url):
     html = get_html(url=period_url)
     tree = HTMLParser(html)
     stat_table = tree.css_first('table.stat-table').css('tbody > tr')
@@ -300,10 +324,10 @@ def get_matchs(period_url, FILENAME_CSV):
         if 'перенесен' not in match_info['date']:
             tournament = match_info['tournament'].lower()
             if 'кубок' in tournament or 'лига' in tournament or 'серия' in tournament:
-                get_stats(match_info, ORDER , FILENAME_CSV)
+                get_stats(match_info)
 
 
-def get_calendar(team_url, message, FILENAME_CSV):
+def get_calendar(team_url, message):
     html = get_html(url=f'{team_url}calendar/')
     tree = HTMLParser(html)
 
@@ -316,11 +340,11 @@ def get_calendar(team_url, message, FILENAME_CSV):
                 period_urls.append(period_url)
 
     counter = len(period_urls)
-
+    print(message)
     period_urls = list(reversed(period_urls))
     for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
-        get_matchs(period_url, FILENAME_CSV)
+        get_matchs(period_url)
 
 
 def get_teams(championship_url):
@@ -365,14 +389,16 @@ def get_tournaments(url,message):
     tournament_links = []
     table = soup.find(class_='b-table b-table-js').find('table').find_all('a')
     for i in range(len(table)-1):
-        title = table[i].get('title').split('. ')[-1].split(' ')[-1].strip(' ')
-        if title in PERIODS2:
+        # title = table[i].get('title').split('. ')[-1].split(' ')[-1].strip(' ')
+        title = table[i].get('title')
+        num ='-'.join([str(x) for x in title.replace('-',' ').split(' ') if x.isdigit()])
+        if num in PERIODS2:
             link = f"https://news.sportbox.ru{table[i].get('href')}"
             tournament_links.append(link)
     tournament_links = list(reversed(tournament_links))
-    get_matchs(tournament_links,message)
+    get_matchs1(tournament_links,message)
 
-def get_matchs(tournament_links,message):
+def get_matchs1(tournament_links,message):
     counter = len(tournament_links)-1
     for n in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         req_tour = get_html(url = tournament_links[n])
