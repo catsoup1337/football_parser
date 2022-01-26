@@ -213,7 +213,7 @@ def get_html(url, attempts = 4):
 
 def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
-    html = get_html(url=url, attempts=ATTEMPTS)
+    html = get_html(url=url)
     if html:
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
@@ -276,7 +276,7 @@ def get_stats(match_info, order, FILENAME_CSV):
 
 
 def get_matchs(period_url, FILENAME_CSV):
-    html = get_html(url=period_url, attempts=ATTEMPTS)
+    html = get_html(url=period_url)
     tree = HTMLParser(html)
     stat_table = tree.css_first('table.stat-table').css('tbody > tr')
     matchs = []
@@ -304,7 +304,7 @@ def get_matchs(period_url, FILENAME_CSV):
 
 
 def get_calendar(team_url, message, FILENAME_CSV):
-    html = get_html(url=f'{team_url}calendar/', attempts=ATTEMPTS)
+    html = get_html(url=f'{team_url}calendar/')
     tree = HTMLParser(html)
 
     period_urls = []
@@ -324,7 +324,7 @@ def get_calendar(team_url, message, FILENAME_CSV):
 
 
 def get_teams(championship_url):
-    html = get_html(url=championship_url, attempts=ATTEMPTS)
+    html = get_html(url=championship_url)
     tree = HTMLParser(html)
     table = tree.css_first('.stat > table > tbody')
     teams = table.css('tr')
