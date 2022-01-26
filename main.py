@@ -214,7 +214,6 @@ def get_html(url, attempts = 4):
 def get_stats(match_info, order, FILENAME_CSV):
     url = match_info['match_url']
     html = get_html(url=url, attempts=ATTEMPTS)
-    print(url)
     if html:
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
@@ -377,13 +376,11 @@ def get_matchs(tournament_links,message):
     counter = len(tournament_links)-1
     for n in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         req_tour = get_html(url = tournament_links[n])
-        print(tournament_links[n])
         soup_tournament = BeautifulSoup(req_tour, 'lxml')
         table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
         for j in range(1,len(table_tours)):
             try:
                 link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
-                print(link_game)
                 get_score(link_game)
             except:
                 print('skip')
