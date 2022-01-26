@@ -31,7 +31,7 @@ proxies = {
     "http":PROXY
 }
 
-ATTEMPTS = 3
+
 ORDER = [
     'Дата',
     '№ тура',
@@ -41,8 +41,18 @@ ORDER = [
     'Голы Команда 2',
     'Команда 2',
     'Данные 1',
-    'Данные 2',
+    'Данные 2']
+
+ORDER2= [
+    'Дата',
+    'Событие',
+    '№ Тура',
+    'Команда 1',
+    'Голы Команда 1',
+    'Голы Команда 2',
+    'Команда 2',
     'Голы']
+
 PERIODS = [ 
     # '2000',
     '2000-2001',
@@ -80,11 +90,70 @@ PERIODS = [
     'calendar//',
     ]
 
+PERIODS2 = [ 
+    '1999-00',
+    '2000',
+    '2000-01',
+    '2001',
+    '2001-02',
+    '2002',
+    '2002-03',
+    '2003',
+    '2003-04',
+    '2004',
+    '2004-05',
+    '2005',
+    '2005-06',
+    '2006',
+    '2006-07',
+    '2007',
+    '2007-08',
+    '2008',
+    '2008-09',
+    '2009',
+    '2009-10',
+    '2010',
+    '2010-11',
+    '2011'
+    '2011-12',
+    '2012',
+    '2012-13',
+    '2013',
+    '2013-14',
+    '2014'
+    '2014-15',
+    '2015',
+    '2015-16',
+    '2016',
+    '2016-17',
+    '2017',
+    '2017-18',
+    '2018',
+    '2018-19',
+    '2019',
+    '2019-20',
+    '2020',
+    '2020-21',
+    '2021',
+    '2021-22',
+    '2022'
+    ]
+
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id,'Привет, напиши название команды на латинице')
+    bot.send_message(message.chat.id,'Привет, выбери в меню нужную функцию')
 
-@bot.message_handler(content_types='text')
+@bot.message_handler(commands=['sports'])
+def start_message(message):
+    msg = bot.send_message(message.chat.id,'Привет, напиши название команды на латинице')
+    bot.register_next_step_handler(msg, handle_team)
+
+@bot.message_handler(commands=['sport_box'])
+def start_message(message):
+    msg = bot.send_message(message.chat.id,'Привет, введи ссылку на команду')
+    bot.register_next_step_handler(msg, handle_team_sportbox)
+
 def handle_team(message):
     try:
         bot.reply_to(message, "Обрабатываю запрос")
@@ -117,7 +186,7 @@ def write_csv(filename, data):
         csv.DictWriter(file, quotechar=" " ,fieldnames=list(data)).writerow(data)
 
 
-def get_html(url, attempts):
+def get_html(url, attempts = 4):
     html = None
     for attempt in range(1, attempts + 1):
         try:
@@ -163,23 +232,6 @@ def get_stats(match_info, order, FILENAME_CSV):
 
         tour = soup.find(class_="top__tournament-name").text.strip('.')
         data['Тур'] = tour
-        event_container  = soup.find_all(class_='event-container')
-        goals = []
-        for i in range(len(event_container)):
-            event = event_container[i].text.split(' ')
-            print(event)
-            if 'Гол!' in event:
-                if event[0] == 'Гол!':
-                    goals.append('1')
-                if event[2] == 'Гол!':
-                    goals.append('-1')
-            if 'Автогол!' in event:
-                if event[4] == 'Автогол!':
-                    goals.append('-1')
-                if event[0] == 'Автогол!':
-                    goals.append('1')
-        data['Голы'] = ','.join(goals)
-        print(','.join(goals))
         try:
             team_home_slag = soup.find(class_="match-summary__team-name match-summary__team-name--home").find('a').get('href').strip('/')
             if team_home_slag.split('/')[0]=='tags':
@@ -222,7 +274,6 @@ def get_stats(match_info, order, FILENAME_CSV):
         data['Данные 2'] = f'{team_away_slag.capitalize()} {goal_away}'
 
         write_csv(filename=FILENAME_CSV, data=data)
-        # print(data['Дата'], data['Тур'], data['Команда 2'])
 
 
 def get_matchs(period_url, FILENAME_CSV):
@@ -281,5 +332,141 @@ def get_teams(championship_url):
     for team in teams:
         team_url = team.css_first('a.name').attributes['href']
         get_calendar(team_url)
+
+#################################################################################
+def handle_team_sportbox(message):
+    global FILENAME2_CSV,FILENAME2_XLSX
+    try:
+        bot.reply_to(message, "Обрабатываю запрос")
+        url = message.text
+        bot.reply_to(message, "Начал парсинг")
+        
+        FILENAME2_CSV = f"{url.split('/')[-1]}.csv"
+        FILENAME2_XLSX = f"{url.split('/')[-1]}.xlsx"
+
+        create_csv(FILENAME2_CSV, ORDER2)
+        get_tournaments(url,message)
+
+    except Exception as e:
+        bot.reply_to(message, e)
+        print(e)
+    finally:
+        merge_all_to_a_book(glob.glob(FILENAME2_CSV), FILENAME2_XLSX)
+        src_t = f'/app/{FILENAME2_XLSX}' 
+        # src_t = f'{FILENAME2_XLSX}' 
+        now = datetime.datetime.now().strftime("%d%m%Y%H%M")
+        y.upload(src_t, f'/documents/{now}{FILENAME2_XLSX}')
+        d_link = y.get_download_link(f'/documents/{now}{FILENAME2_XLSX}')
+        bot.reply_to(message, f"Всё готово, вот ссылка на скачивание {d_link}")
+
+
+def get_tournaments(url,message):
+    r = get_html(url)
+    soup = BeautifulSoup(r, 'lxml')
+    tournament_links = []
+    table = soup.find(class_='b-table b-table-js').find('table').find_all('a')
+    for i in range(len(table)-1):
+        title = table[i].get('title').split('. ')[-1].split(' ')[-1].strip(' ')
+        if title in PERIODS2:
+            link = f"https://news.sportbox.ru{table[i].get('href')}"
+            tournament_links.append(link)
+    tournament_links = list(reversed(tournament_links))
+    get_matchs(tournament_links,message)
+
+def get_matchs(tournament_links,message):
+    counter = len(tournament_links)-1
+    for n in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
+        req_tour = get_html(url = tournament_links[n])
+        print(tournament_links[n])
+        soup_tournament = BeautifulSoup(req_tour, 'lxml')
+        table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
+        for j in range(1,len(table_tours)):
+            try:
+                link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
+                print(link_game)
+                get_score(link_game)
+            except:
+                print('skip')
+
+def get_score(link_game):
+    dict_goals = {}
+    data = dict.fromkeys(ORDER2)
+    req_game = get_html(url = link_game)
+    soup_game = BeautifulSoup(req_game, 'lxml')
+
+    top = soup_game.find(class_='b-match')
+    res = 'Данных нет'
+    if top.find(class_='b-match__monitor__count').text != ' - : - ':
+        time_lane_right = []
+        try:
+            time_lane_right_goals = soup_game.find_all(class_='event_right_command stats_pict stats_pict_gol')
+            for _ in range(len(time_lane_right_goals)):
+                time_lane_right.append(time_lane_right_goals[_])
+        except:
+            ...
+        try:
+            time_lane_right_pin = soup_game.find_all(class_='event_right_command stats_pict stats_pict_pin')
+            for _ in range(len(time_lane_right_pin)):
+                time_lane_right.append(time_lane_right_pin[_])
+        except:
+            ...
+        try:
+            time_lane_right_pin = soup_game.find_all(class_='event_right_command stats_pict stats_pict_autogol')
+            for _ in range(len(time_lane_right_pin)):
+                time_lane_right.append(time_lane_right_pin[_])
+        except:
+            ...
+        for i in range(len(time_lane_right)):
+            minutes = time_lane_right[i].get('attr-min')
+            value = '-1'
+            dict_goals[minutes] = value
+
+        time_lane_left = []
+        try:
+            time_lane_left_goals = soup_game.find_all(class_='event_left_command stats_pict stats_pict_gol')
+            for _ in range(len(time_lane_left_goals)):
+                time_lane_left.append(time_lane_left_goals[_])
+        except:
+            ...
+        try:
+            time_lane_left_pin = soup_game.find_all(class_='event_left_command stats_pict stats_pict_pin')
+            for _ in range(len(time_lane_left_pin)):
+                time_lane_left.append(time_lane_left_pin[_])
+        except:
+            ...
+        try:
+            time_lane_left_auto = soup_game.find_all(class_='event_left_command stats_pict stats_pict_autogol')
+            for _ in range(len(time_lane_left_auto)):
+                time_lane_left.append(time_lane_left_auto[_])
+        except:
+            ...
+        for i2 in range(len(time_lane_left)):
+            minutes = time_lane_left[i2].get('attr-min')
+            value = '+1'
+            dict_goals[minutes] = value
+
+        sorted_di = dict(sorted(dict_goals.items(), key=lambda f: int(f[0])))
+        res = ','.join(list(sorted_di.values()))
+
+    team1 = top.find(class_='b-match__side b-match__side_left one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
+    team2 = top.find(class_='b-match__side b-match__side_right one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
+    event = soup_game.find(class_='col-lg-8 col-md-8 col-sm-7 col-xs-12').find(class_='b-tournaments-top-menus')
+    event_name = event.find(class_='tournaments-selector dropdown tournaments-main').find('a').text
+    event_num = event.find_all(class_='tournaments-selector dropdown')[1].find('a').text
+    date = top.find(class_='match_count_date').text.strip()
+    print(f'"{team1}","{team2}"')
+    count = top.find(class_='b-match__monitor__count').text.replace('\n','').split(':')
+    count1 = count[0].strip()
+    count2 = count[1].strip()
+    data['Дата'] = date.replace('\n','').strip().split(' ')[0]
+    data['Событие'] = event_name.replace(' ','_').strip()
+    data['№ Тура'] = event_num.replace(' ','_').strip()
+    data['Команда 1'] = team1
+    data['Голы Команда 1'] = count1
+    data['Голы Команда 2'] = count2
+    data['Команда 2'] = team2
+    data['Голы'] = res
+    write_csv(FILENAME2_CSV, data)
+
 
 bot.infinity_polling()
