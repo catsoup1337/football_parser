@@ -403,13 +403,17 @@ def get_matchs1(tournament_links,message):
     for n in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         req_tour = get_html(url = tournament_links[n])
         soup_tournament = BeautifulSoup(req_tour, 'lxml')
-        table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
-        for j in range(1,len(table_tours)):
-            try:
-                link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
-                get_score(link_game)
-            except:
-                print('skip')
+        try:
+            table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
+            for j in range(1,len(table_tours)):
+                try:
+                    link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
+                    get_score(link_game)
+                    # print(link_game)
+                except:
+                    print('skip')
+        except:
+            continue
 
 def get_score(link_game):
     dict_goals = {}
@@ -477,7 +481,7 @@ def get_score(link_game):
     event_name = event.find(class_='tournaments-selector dropdown tournaments-main').find('a').text
     event_num = event.find_all(class_='tournaments-selector dropdown')[1].find('a').text
     date = top.find(class_='match_count_date').text.strip()
-    print(f'"{team1}","{team2}"')
+    # print(f'"{team1}","{team2}"')
     count = top.find(class_='b-match__monitor__count').text.replace('\n','').split(':')
     count1 = count[0].strip()
     count2 = count[1].strip()
