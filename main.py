@@ -357,6 +357,7 @@ def get_teams(championship_url):
         get_calendar(team_url)
 
 #################################################################################
+
 def handle_team_sportbox(message):
     global FILENAME2_CSV,FILENAME2_XLSX
     try:
@@ -392,10 +393,11 @@ def get_tournaments(url,message):
         # title = table[i].get('title').split('. ')[-1].split(' ')[-1].strip(' ')
         title = table[i].get('title')
         num ='-'.join([str(x) for x in title.replace('-',' ').split(' ') if x.isdigit()])
+        # print(num)
         if num in PERIODS2:
             link = f"https://news.sportbox.ru{table[i].get('href')}"
             tournament_links.append(link)
-    tournament_links = list(reversed(tournament_links))
+    # tournament_links = list(reversed(tournament_links))
     get_matchs1(tournament_links,message)
 
 def get_matchs1(tournament_links,message):
@@ -405,11 +407,12 @@ def get_matchs1(tournament_links,message):
         soup_tournament = BeautifulSoup(req_tour, 'lxml')
         try:
             table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
-            for j in range(1,len(table_tours)):
+            print(table_tours)
+            for j in range(1,len(table_tours)+1):
                 try:
                     link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
                     get_score(link_game)
-                    # print(link_game)
+                    print(link_game)
                 except:
                     print('skip')
         except:
