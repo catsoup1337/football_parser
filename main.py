@@ -397,7 +397,7 @@ def get_tournaments(url,message):
         if num in PERIODS2:
             link = f"https://news.sportbox.ru{table[i].get('href')}"
             tournament_links.append(link)
-    # tournament_links = list(reversed(tournament_links))
+    tournament_links = list(reversed(tournament_links))
     get_matchs1(tournament_links,message)
 
 def get_matchs1(tournament_links,message):
@@ -407,7 +407,6 @@ def get_matchs1(tournament_links,message):
         soup_tournament = BeautifulSoup(req_tour, 'lxml')
         try:
             table_tours = soup_tournament.find(class_='calendar-cutting-js').find('tbody').find_all('a')
-            print(table_tours)
             for j in range(1,len(table_tours)+1):
                 try:
                     link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
@@ -430,19 +429,19 @@ def get_score(link_game):
         time_lane_right = []
         try:
             time_lane_right_goals = soup_game.find_all(class_='event_right_command stats_pict stats_pict_gol')
-            for _ in range(len(time_lane_right_goals)):
+            for _ in range(len(time_lane_right_goals)+1):
                 time_lane_right.append(time_lane_right_goals[_])
         except:
             ...
         try:
             time_lane_right_pin = soup_game.find_all(class_='event_right_command stats_pict stats_pict_pin')
-            for _ in range(len(time_lane_right_pin)):
+            for _ in range(len(time_lane_right_pin)+1):
                 time_lane_right.append(time_lane_right_pin[_])
         except:
             ...
         try:
             time_lane_right_pin = soup_game.find_all(class_='event_right_command stats_pict stats_pict_autogol')
-            for _ in range(len(time_lane_right_pin)):
+            for _ in range(len(time_lane_right_pin)+1):
                 time_lane_right.append(time_lane_right_pin[_])
         except:
             ...
@@ -454,19 +453,19 @@ def get_score(link_game):
         time_lane_left = []
         try:
             time_lane_left_goals = soup_game.find_all(class_='event_left_command stats_pict stats_pict_gol')
-            for _ in range(len(time_lane_left_goals)):
+            for _ in range(len(time_lane_left_goals)+1):
                 time_lane_left.append(time_lane_left_goals[_])
         except:
             ...
         try:
             time_lane_left_pin = soup_game.find_all(class_='event_left_command stats_pict stats_pict_pin')
-            for _ in range(len(time_lane_left_pin)):
+            for _ in range(len(time_lane_left_pin)+1):
                 time_lane_left.append(time_lane_left_pin[_])
         except:
             ...
         try:
             time_lane_left_auto = soup_game.find_all(class_='event_left_command stats_pict stats_pict_autogol')
-            for _ in range(len(time_lane_left_auto)):
+            for _ in range(len(time_lane_left_auto)+1):
                 time_lane_left.append(time_lane_left_auto[_])
         except:
             ...
@@ -477,6 +476,7 @@ def get_score(link_game):
 
         sorted_di = dict(sorted(dict_goals.items(), key=lambda f: int(f[0])))
         res = ','.join(list(sorted_di.values()))
+        print(res)
 
     team1 = top.find(class_='b-match__side b-match__side_left one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
     team2 = top.find(class_='b-match__side b-match__side_right one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
