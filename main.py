@@ -448,7 +448,11 @@ def get_score(link_game):
         for i in range(len(time_lane_right)):
             minutes = time_lane_right[i].get('attr-min')
             value = '-1'
-            dict_goals[minutes] = value
+            if dict_goals.get(minutes): 
+                dict_goals[minutes].append(value)
+            else:
+                dict_goals.update({minutes: [value]})
+            # dict_goals[minutes] = value
 
         time_lane_left = []
         try:
@@ -472,10 +476,17 @@ def get_score(link_game):
         for i2 in range(len(time_lane_left)):
             minutes = time_lane_left[i2].get('attr-min')
             value = '+1'
-            dict_goals[minutes] = value
-
-        sorted_di = dict(sorted(dict_goals.items(), key=lambda f: int(f[0])))
-        res = ','.join(list(sorted_di.values()))
+            if dict_goals.get(minutes): 
+                dict_goals[minutes].append(value)
+            else:
+                dict_goals.update({minutes: [value]})
+            # dict_goals[minutes] = value
+        sorted_di = sorted(dict_goals.items(), key=lambda f: int(f[0]))
+        final=[]
+        for x, y in sorted_di:
+            for j in range(len(y)):
+                final.append(y[j])
+        res = ','.join(final)
         print(res)
 
     team1 = top.find(class_='b-match__side b-match__side_left one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
