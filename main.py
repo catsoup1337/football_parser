@@ -19,11 +19,12 @@ from pyexcel.cookbook import merge_all_to_a_book
 import glob
 
 load_dotenv()
-y = yadisk.YaDisk(token="AQAAAAAeeuFqAAeVCjRRWT3G8khEv1eCtEu6uY4")
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 PROXY = os.getenv('PROXY')
 
+y = yadisk.YaDisk(token=YANDEX_TOKEN)
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 ua = UserAgent()
 
@@ -170,14 +171,18 @@ def start_message(message):
 @bot.message_handler(commands=['sports'])
 def start_message(message):
     msg = bot.send_message(message.chat.id,'Привет, напиши название команды на латинице')
-    bot.register_next_step_handler(msg, handle_team)
+    bot.register_next_step_handler(msg, handle_team_sports)
 
 @bot.message_handler(commands=['sport_box'])
 def start_message(message):
     msg = bot.send_message(message.chat.id,'Привет, введи ссылку на команду')
     bot.register_next_step_handler(msg, handle_team_sportbox)
 
-def handle_team(message):
+
+#  SPORTS RU 
+
+
+def handle_team_sports(message):
     global FILENAME_CSV,FILENAME_XLSX
     try:
         bot.reply_to(message, "Обрабатываю запрос")
@@ -242,9 +247,7 @@ def get_stats(match_info):
         soup = BeautifulSoup(html, 'lxml')
         tree = HTMLParser(html)
         data = dict.fromkeys(ORDER)
-        # time.sleep(1)
         match_date = tree.css_first('time[itemprop="startDate"]').attributes['datetime'][:10].split('-')
-        # print(match_date)
         match_date = '{2}.{1}.{0}'.format(*match_date)
         data['Дата'] = match_date
 
@@ -273,8 +276,6 @@ def get_stats(match_info):
             team_away_slag = translit(team_away_slag, "ru", reversed=True).lower()
         goal_home = str(soup.find_all(class_="matchboard__card")[0].text)
         goal_away = str(soup.find_all(class_="matchboard__card")[1].text)
-        # print(goal_home,'-',goal_away)
-        print(team_home_slag,team_away_slag)
 
         if 'В гостях' in match_info['place']:
             team_1_slag = team_away_slag
@@ -340,7 +341,6 @@ def get_calendar(team_url, message):
                 period_urls.append(period_url)
 
     counter = len(period_urls)
-    print(message)
     period_urls = list(reversed(period_urls))
     for i in trange(counter, token=TELEGRAM_TOKEN, chat_id=message.chat.id):
         period_url = period_urls[i]
@@ -357,7 +357,8 @@ def get_teams(championship_url):
         get_calendar(team_url)
 
 #################################################################################
-
+#  SPORTBOX RU                                                                  #
+#################################################################################
 def handle_team_sportbox(message):
     global FILENAME2_CSV,FILENAME2_XLSX
     try:
@@ -373,7 +374,6 @@ def handle_team_sportbox(message):
 
     except Exception as e:
         bot.reply_to(message, e)
-        print(e)
     finally:
         merge_all_to_a_book(glob.glob(FILENAME2_CSV), FILENAME2_XLSX)
         src_t = f'/app/{FILENAME2_XLSX}' 
@@ -390,10 +390,8 @@ def get_tournaments(url,message):
     tournament_links = []
     table = soup.find(class_='b-table b-table-js').find('table').find_all('a')
     for i in range(len(table)-1):
-        # title = table[i].get('title').split('. ')[-1].split(' ')[-1].strip(' ')
         title = table[i].get('title')
         num ='-'.join([str(x) for x in title.replace('-',' ').split(' ') if x.isdigit()])
-        # print(num)
         if num in PERIODS2:
             link = f"https://news.sportbox.ru{table[i].get('href')}"
             tournament_links.append(link)
@@ -411,9 +409,8 @@ def get_matchs1(tournament_links,message):
                 try:
                     link_game = f"https://news.sportbox.ru{table_tours[j].get('href')}"
                     get_score(link_game)
-                    print(link_game)
                 except:
-                    print('skip')
+                    ...
         except:
             continue
 
@@ -480,14 +477,12 @@ def get_score(link_game):
                 dict_goals[minutes].append(value)
             else:
                 dict_goals.update({minutes: [value]})
-            # dict_goals[minutes] = value
         sorted_di = sorted(dict_goals.items(), key=lambda f: int(f[0]))
         final=[]
         for x, y in sorted_di:
             for j in range(len(y)):
                 final.append(y[j])
         res = ','.join(final)
-        print(res)
 
     team1 = top.find(class_='b-match__side b-match__side_left one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
     team2 = top.find(class_='b-match__side b-match__side_right one_player').find(class_='b-match__team-logo').get('title').replace(' ','-').strip()
@@ -495,7 +490,6 @@ def get_score(link_game):
     event_name = event.find(class_='tournaments-selector dropdown tournaments-main').find('a').text
     event_num = event.find_all(class_='tournaments-selector dropdown')[1].find('a').text
     date = top.find(class_='match_count_date').text.strip()
-    # print(f'"{team1}","{team2}"')
     count = top.find(class_='b-match__monitor__count').text.replace('\n','').split(':')
     count1 = count[0].strip()
     count2 = count[1].strip()
@@ -509,5 +503,5 @@ def get_score(link_game):
     data['Голы'] = res
     write_csv(FILENAME2_CSV, data)
 
-
-bot.infinity_polling()
+if __name__ == '__main__':
+    bot.infinity_polling()
