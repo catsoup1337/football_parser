@@ -356,9 +356,10 @@ def get_teams(championship_url):
         team_url = team.css_first('a.name').attributes['href']
         get_calendar(team_url)
 
-#################################################################################
-#  SPORTBOX RU                                                                  #
-#################################################################################
+
+#  SPORTBOX RU 
+
+
 def handle_team_sportbox(message):
     global FILENAME2_CSV,FILENAME2_XLSX
     try:
